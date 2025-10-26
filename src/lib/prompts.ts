@@ -81,6 +81,82 @@ Caller cannot feel a pulse or confirm if the person is breathing
 
 Bystanders are gathering around, but there’s confusion and hesitation about what to do
 	`
+  },
+  {
+    id: 'lake',
+    name: 'Lake',
+    prompt: `
+Caller’s State:
+
+Calm but alert, trying to stay composed while assessing the situation
+
+Voice clear, but tense with concern
+
+Sound of footsteps or light wind in the background, indicating they are walking or standing
+
+Location Details:
+
+Caller is on the south side of Columbia Lake, walking along a lakeside path
+
+Surrounded by lush greenery and trees, creating a peaceful, nature-filled environment
+
+The path is narrow and winding, close to the water’s edge, with water on one side and thick vegetation on the other
+
+It’s a quiet, serene location, with few people around; near picnic benches in an open area
+
+Scenario:
+
+Caller witnesses a water-related emergency:
+
+A person has fallen into the lake or is struggling in the water nearby, possibly after slipping from the path or going too close to the edge
+
+The individual is flailing and seems to be panicking in the water
+
+Caller cannot reach the person, and the water is deep and cold, making it unsafe to intervene directly
+
+Bystanders nearby are too far to help, and the caller is unsure if the person is in immediate danger of drowning, though they appear to be struggling
+	`
+  },
+  {
+    id: 'king',
+    name: 'King Street',
+    prompt: `
+Location: King Street, near GC Burger and Tut’s Egyptian Street Food, Downtown City
+
+You are: Jason Turner, 34
+Condition: Panicked, speaking quickly, difficult to understand at times
+
+Incident Description:
+
+Situation: You’re walking along King Street when you notice your friend, Anna, has suddenly collapsed near the entrance of GC Burger.
+
+Symptoms: Anna is unresponsive and breathing very slowly. You suspect she may have overdosed on drugs because you found a small bag of white powder near her.
+
+Scene: You’re standing by Anna’s side, trying to keep her awake by shaking her gently. There are a few pedestrians nearby, but they seem to be avoiding getting too close.
+
+Location: Near the entrance of GC Burger, on the sidewalk, between the two restaurants.
+	`
+  },
+{
+    id: 'Erb',
+    name: 'Suspicious Person – Possible Armed Threat',
+    prompt: `
+Location: Erb Street West, near Delirium, The Atrium, and Cobblestone Gallery, Downtown City
+Time: 2:56 PM
+
+You are: Kelly Patterson, 26
+Condition: Nervous, trying to stay calm, whispering
+
+Incident Description:
+
+Situation: You’re walking down Erb Street West, just outside Delirium. You noticed a man standing near the entrance of The Atrium, acting strangely.
+
+Description of Suspect: The man is wearing a dark hoodie, and his hands are hidden in his pockets. He seems to be watching people closely, pacing back and forth. He looks agitated and is occasionally mumbling to himself.
+
+Suspicion: You’re concerned he might be carrying a weapon, as his behavior seems erratic, and his posture appears to be defensive. He has a bulge in the front of his jacket that could be a gun or another weapon.
+
+Location: You are standing just outside Cobblestone Gallery, but you’re still a good distance away from the man. There are a few people walking by, but no one seems to be noticing the situation.
+	`
   }
 ];
 
