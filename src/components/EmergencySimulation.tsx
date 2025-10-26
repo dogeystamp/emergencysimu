@@ -5,15 +5,19 @@ import { useConversation } from '@elevenlabs/react';
 import ConversationControls from './ConversationControls';
 import ConversationDisplay from './ConversationDisplay';
 import EmergencyHeader from './EmergencyHeader';
+import { getRandomEmergencyPrompt } from '@/lib/prompts';
 
 interface EmergencySimulationProps {
   systemPrompt: string;
+  scenarioName: string;
 }
 
-export default function EmergencySimulation({ systemPrompt }: EmergencySimulationProps) {
+export default function EmergencySimulation({ systemPrompt, scenarioName }: EmergencySimulationProps) {
   const [isConnected, setIsConnected] = useState(false);
   const [messages, setMessages] = useState<Array<{id: string, type: 'user' | 'agent', content: string, timestamp: Date}>>([]);
   const [userId] = useState(() => `dispatcher_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+  const [currentPrompt, setCurrentPrompt] = useState(systemPrompt);
+  const [currentScenarioName, setCurrentScenarioName] = useState(scenarioName);
 
   const conversation = useConversation({
     onConnect: () => {
@@ -40,14 +44,14 @@ export default function EmergencySimulation({ systemPrompt }: EmergencySimulatio
     onStatusChange: (status) => {
       console.log('Status changed:', status);
     },
-    overrides: {
-      agent: {
-        prompt: {
-          prompt: systemPrompt
-        },
-        firstMessage: 'Hello?'
+      overrides: {
+        agent: {
+          prompt: {
+            prompt: currentPrompt
+          },
+          firstMessage: 'Hello?'
+        }
       }
-    }
   });
 
   const startConversation = async () => {
@@ -83,9 +87,16 @@ export default function EmergencySimulation({ systemPrompt }: EmergencySimulatio
     conversation.sendUserMessage(message);
   };
 
+  const getNewScenario = () => {
+    const newPrompt = getRandomEmergencyPrompt();
+    setCurrentPrompt(newPrompt.prompt);
+    setCurrentScenarioName(newPrompt.name);
+    setMessages([]); // Clear previous conversation
+  };
+
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <EmergencyHeader />
+      <EmergencyHeader scenarioName={currentScenarioName} onNewScenario={getNewScenario} />
       
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">

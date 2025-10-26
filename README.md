@@ -6,17 +6,17 @@ A Next.js web application that simulates emergency calls for training dispatcher
 
 - 🚨 **Real-time Voice Conversations**: Uses ElevenLabs WebRTC for low-latency voice communication
 - 📞 **Emergency Call Simulation**: Simulates realistic emergency scenarios for dispatcher training
+- 🎲 **Random Scenario Selection**: 8 different emergency scenarios chosen randomly
 - 💬 **Text Input Support**: Allows typing responses in addition to voice
 - ⚡ **Quick Response Buttons**: Pre-configured dispatcher phrases for common situations
 - 📊 **Training Feedback**: Built-in feedback system for performance evaluation
-- 🎯 **Configurable System Prompts**: Dynamic system prompt loading from external server
+- 🔄 **Dynamic Scenario Switching**: Get new random scenarios during training
 
 ## Prerequisites
 
 - Node.js 18+ 
 - ElevenLabs account with Agents Platform access
 - Microphone access in your browser
-- System prompt server running on localhost:8080 (or configured URL)
 
 ## Setup
 
@@ -34,38 +34,21 @@ A Next.js web application that simulates emergency calls for training dispatcher
    Edit `.env.local` and add your ElevenLabs Agent ID:
    ```
    NEXT_PUBLIC_ELEVENLABS_AGENT_ID=your-agent-id-here
-   NEXT_PUBLIC_SYSTEM_PROMPT_URL=http://localhost:8080/system-prompt
    ```
 
-3. **Set Up System Prompt Server**
-   
-   A sample server is included (`server.js`) that provides system prompts for different emergency scenarios.
-   
-   Start the server:
-   ```bash
-   node server.js
-   ```
-   
-   The server runs on `http://localhost:8080` and provides:
-   - `/system-prompt` - Default emergency scenario
-   - `/system-prompt?scenario=medical` - Medical emergency
-   - `/system-prompt?scenario=fire` - Fire emergency  
-   - `/system-prompt?scenario=crime` - Crime emergency
-   
-   You can also create your own server that responds with plain text at the configured URL.
-
-4. **Start the Development Server**
+3. **Start the Development Server**
    ```bash
    npm run dev
    ```
 
-5. **Open the Application**
+4. **Open the Application**
    
    Navigate to `http://localhost:3000` in your browser.
 
 ## Usage
 
 1. **Start Training Session**
+   - A random emergency scenario will be automatically selected
    - Click "Start Emergency Call" button
    - Allow microphone access when prompted
    - The AI agent will begin simulating an emergency caller
@@ -76,7 +59,12 @@ A Next.js web application that simulates emergency calls for training dispatcher
    - Use quick response buttons for common dispatcher phrases
    - Provide clear, calm instructions
 
-3. **End the Session**
+3. **Switch Scenarios**
+   - Click "New Scenario" button to get a different random emergency
+   - Previous conversation will be cleared
+   - Start a new training session with the new scenario
+
+4. **End the Session**
    - Click "End Call" when training is complete
    - Provide feedback on your performance if prompted
 
@@ -85,7 +73,19 @@ A Next.js web application that simulates emergency calls for training dispatcher
 ### Environment Variables
 
 - `NEXT_PUBLIC_ELEVENLABS_AGENT_ID`: Your ElevenLabs Agent ID (required)
-- `NEXT_PUBLIC_SYSTEM_PROMPT_URL`: URL to fetch system prompts from (default: http://localhost:8080/system-prompt)
+
+### Available Emergency Scenarios
+
+The application includes 8 different emergency scenarios that are randomly selected:
+
+1. **Medical Emergency - Chest Pain**: Family member with severe chest pain and breathing difficulties
+2. **Fire Emergency - Apartment Building**: Smoke and fire in apartment building
+3. **Crime Emergency - Break-in**: Witnessed break-in at neighbor's house
+4. **Traffic Accident - Collision**: Two-car collision at intersection
+5. **Domestic Disturbance**: Loud arguing and potential violence from neighbors
+6. **Mental Health Crisis - Suicide Threat**: Friend threatening self-harm
+7. **Child Emergency - Choking**: 3-year-old child choking on toy
+8. **Elderly Fall Emergency**: Elderly person fell down stairs with potential injuries
 
 ### ElevenLabs Agent Setup
 
@@ -104,10 +104,12 @@ src/
 │   └── globals.css           # Global styles
 ├── components/
 │   ├── EmergencySimulation.tsx    # Main simulation component
-│   ├── EmergencyHeader.tsx        # Header with branding
+│   ├── EmergencyHeader.tsx        # Header with branding and scenario info
 │   ├── ConversationDisplay.tsx    # Message display area
 │   ├── ConversationControls.tsx   # Control buttons and inputs
 │   └── LoadingSpinner.tsx         # Loading indicator
+├── lib/
+│   └── prompts.ts            # Emergency scenario prompts and selection logic
 ```
 
 ## Key Components
@@ -115,7 +117,13 @@ src/
 ### EmergencySimulation
 - Main component that manages the ElevenLabs conversation
 - Handles connection state and message flow
-- Integrates system prompt from external server
+- Manages random scenario selection and switching
+- Integrates with hardcoded emergency prompts
+
+### EmergencyHeader
+- Displays current emergency scenario
+- Provides "New Scenario" button for scenario switching
+- Shows training session information
 
 ### ConversationDisplay
 - Shows conversation history between dispatcher and caller
@@ -170,9 +178,10 @@ src/
 
 ### Adding New Features
 
-1. **New Quick Responses**: Edit the `quickResponses` array in `ConversationControls.tsx`
-2. **UI Customization**: Modify Tailwind classes in component files
-3. **New Message Types**: Extend the message interface in `EmergencySimulation.tsx`
+1. **New Emergency Scenarios**: Add new scenarios to the `EMERGENCY_PROMPTS` array in `src/lib/prompts.ts`
+2. **New Quick Responses**: Edit the `quickResponses` array in `ConversationControls.tsx`
+3. **UI Customization**: Modify Tailwind classes in component files
+4. **New Message Types**: Extend the message interface in `EmergencySimulation.tsx`
 
 ## License
 
