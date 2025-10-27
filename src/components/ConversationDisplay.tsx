@@ -8,6 +8,7 @@ interface ConversationDisplayProps {
   isSpeaking: boolean;
   setIsSpeaking: (speaking: boolean) => void;
   addMessage: (message: {id: string, type: 'user' | 'agent', content: string, timestamp: Date}) => void;
+  elevenLabsWsRef: React.MutableRefObject<WebSocket | null>; // New prop
 }
 
 export default function ConversationDisplay({
@@ -16,41 +17,38 @@ export default function ConversationDisplay({
   isSpeaking,
   setIsSpeaking,
   addMessage,
+  elevenLabsWsRef,
 }: ConversationDisplayProps) {
   const audioContextRef = useRef<AudioContext | null>(null);
   const audioQueueRef = useRef<AudioBuffer[]>([]);
   const isPlayingRef = useRef(false);
-  const wsRef = useRef<WebSocket | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Initialize AudioContext on user gesture (e.g., first click on start call button)
-    // For now, we'll try to initialize it here, but might need to move it.
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
     }
 
-    // WebSocket connection
-    if (isConnected && !wsRef.current) {
-      wsRef.current = new WebSocket(`ws://${window.location.host}/api/audio-chat`);
+    const ws = elevenLabsWsRef.current;
 
-      wsRef.current.onopen = () => {
-        console.log('WebSocket connected for audio playback');
-      };
-
-      wsRef.current.onmessage = async (event) => {
+    if (ws && isConnected) {
+      ws.onmessage = async (event) => {
+        // IMPORTANT: Consult ElevenLabs Agents API docs for exact message format
         if (typeof event.data === 'string') {
-          // Handle text messages (e.g., Gemini response text)
           try {
             const data = JSON.parse(event.data);
             if (data.type === 'text') {
               addMessage({ id: Date.now().toString(), type: 'agent', content: data.content, timestamp: new Date() });
             } else if (data.type === 'error') {
-              console.error('Server error:', data.content);
+              console.error('ElevenLabs Agent error:', data.content);
               addMessage({ id: Date.now().toString(), type: 'agent', content: `Error: ${data.content}`, timestamp: new Date() });
+            } else if (data.type === 'final_transcript') {
+              // Handle final transcript from agent if needed
+              console.log('Agent final transcript:', data.content);
             }
           } catch (e) {
-            console.error('Failed to parse WebSocket string message:', e);
+            console.error('Failed to parse ElevenLabs Agent string message:', e);
           }
         } else if (event.data instanceof Blob) {
           // Handle audio data
@@ -69,28 +67,25 @@ export default function ConversationDisplay({
         }
       };
 
-      wsRef.current.onclose = () => {
-        console.log('WebSocket disconnected for audio playback');
+      ws.onclose = () => {
+        console.log('ElevenLabs Agent WebSocket disconnected');
         setIsSpeaking(false);
       };
 
-      wsRef.current.onerror = (error) => {
-        console.error('WebSocket error:', error);
+      ws.onerror = (error) => {
+        console.error('ElevenLabs Agent WebSocket error:', error);
         setIsSpeaking(false);
       };
     }
 
     return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-        wsRef.current = null;
-      }
+      // Cleanup is handled by EmergencySimulation for the main ElevenLabs Agent WebSocket
       if (audioContextRef.current) {
         audioContextRef.current.close();
         audioContextRef.current = null;
       }
     };
-  }, [isConnected, addMessage, setIsSpeaking]);
+  }, [isConnected, addMessage, setIsSpeaking, elevenLabsWsRef]);
 
   useEffect(() => {
     if (scrollRef.current) {
