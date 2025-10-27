@@ -8,55 +8,69 @@ interface ConversationDisplayProps {
 
 export default function ConversationDisplay({ messages, isConnected, isSpeaking }: ConversationDisplayProps) {
   return (
-    <div className="h-96 bg-gray-900 border-b border-gray-700 overflow-y-auto">
-      <div className="p-4 space-y-4">
-        {!isConnected && (
-          <div className="text-center text-gray-400 py-8">
-            <div className="text-lg mb-2">📞 Ready to Start Training</div>
-            <div className="text-sm">Click &quot;Start Emergency Call&quot; to begin the simulation</div>
+    <div className="flex-1 bg-slate-900/50 overflow-y-auto p-6">
+      <div className="space-y-6">
+        {!isConnected && messages.length === 0 && (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center max-w-sm">
+              <div className="w-24 h-24 bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span className="text-5xl">📞</span>
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2">Ready to Start</h3>
+              <p className="text-slate-400">
+                Click the "Start Emergency Call" button to begin your training simulation.
+              </p>
+            </div>
           </div>
         )}
         
-        {isConnected && messages.length === 0 && (
-          <div className="text-center text-gray-400 py-8">
-            <div className="text-lg mb-2">🔗 Connected to Emergency Services</div>
-            <div className="text-sm">Waiting for agent response...</div>
+        {isConnected && messages.length === 0 && !isSpeaking && (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center max-w-sm">
+              <div className="w-24 h-24 bg-gradient-to-br from-green-800 to-emerald-900 border border-green-700 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span className="text-5xl">🔗</span>
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2">Connected</h3>
+              <p className="text-slate-400">The simulation has started. Waiting for the first message.</p>
+            </div>
           </div>
         )}
 
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
+            className={`flex gap-3 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+            {message.type === 'agent' && (
+              <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0">
+                <span className="text-lg">📞</span>
+              </div>
+            )}
             <div
-              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+              className={`max-w-xl px-5 py-3 rounded-2xl ${
                 message.type === 'user'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-700 text-gray-100'
-              }`}
-            >
-              <div className="text-sm font-medium mb-1">
-                {message.type === 'user' ? 'You (Dispatcher)' : 'Emergency Caller'}
-              </div>
-              <div className="text-sm">{message.content}</div>
-              <div className="text-xs opacity-70 mt-1">
-                {message.timestamp.toLocaleTimeString()}
-              </div>
+                  ? 'bg-blue-600 text-white rounded-br-none'
+                  : 'bg-slate-700 text-slate-100 rounded-bl-none'
+              }`}>
+              <p className="text-sm leading-relaxed">{message.content}</p>
             </div>
+            {message.type === 'user' && (
+              <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
+                <span className="text-sm font-bold">YOU</span>
+              </div>
+            )}
           </div>
         ))}
 
         {isSpeaking && (
-          <div className="flex justify-start">
-            <div className="bg-gray-700 text-gray-100 px-4 py-2 rounded-lg">
-              <div className="flex items-center space-x-2">
-                <div className="flex space-x-1">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                </div>
-                <span className="text-sm">Emergency caller is speaking...</span>
+          <div className="flex gap-3">
+            <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0">
+              <span className="text-lg">📞</span>
+            </div>
+            <div className="bg-slate-700 text-slate-100 px-5 py-3 rounded-2xl rounded-bl-none">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" style={{animationDelay: '0.1s'}}></div>
+                <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
               </div>
             </div>
           </div>

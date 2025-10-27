@@ -1,8 +1,16 @@
 // Emergency scenario prompts for dispatcher training
-export const EMERGENCY_PROMPTS = [
+export interface EmergencyPrompt {
+  id: string;
+  name: string;
+  prompt: string;
+  coordinates?: { lat: number; lng: number };
+}
+
+export const EMERGENCY_PROMPTS: EmergencyPrompt[] = [
   {
     id: 'caraccident',
     name: 'Car Accident',
+    coordinates: { lat: 43.4723, lng: -80.5449 },
     prompt: `
 Caller’s State:
 
@@ -46,6 +54,7 @@ Caller feels they might be in shock and is trying to avoid panicking, focusing o
   {
     id: 'mc',
     name: 'MC',
+    coordinates: { lat: 43.4723, lng: -80.5449 },
     prompt: `
 Emergency Dispatch Scenario:
 
@@ -85,6 +94,7 @@ Bystanders are gathering around, but there’s confusion and hesitation about wh
   {
     id: 'lake',
     name: 'Lake',
+    coordinates: { lat: 43.4689, lng: -80.5370 },
     prompt: `
 Caller’s State:
 
@@ -120,6 +130,7 @@ Bystanders nearby are too far to help, and the caller is unsure if the person is
   {
     id: 'king',
     name: 'King Street',
+    coordinates: { lat: 43.4643, lng: -80.5204 },
     prompt: `
 Location: King Street, near GC Burger and Tut’s Egyptian Street Food, Downtown City
 
@@ -137,9 +148,10 @@ Scene: You’re standing by Anna’s side, trying to keep her awake by shaking h
 Location: Near the entrance of GC Burger, on the sidewalk, between the two restaurants.
 	`
   },
-{
+  {
     id: 'Erb',
     name: 'Suspicious Person – Possible Armed Threat',
+    coordinates: { lat: 43.4615, lng: -80.5234 },
     prompt: `
 Location: Erb Street West, near Delirium, The Atrium, and Cobblestone Gallery, Downtown City
 Time: 2:56 PM

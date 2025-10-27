@@ -1,121 +1,204 @@
 'use client';
 
 import { useState } from 'react';
-import { useConversation } from '@elevenlabs/react';
 import ConversationControls from './ConversationControls';
 import ConversationDisplay from './ConversationDisplay';
 import EmergencyHeader from './EmergencyHeader';
+import EmergencyMap from './EmergencyMap';
 import { getRandomEmergencyPrompt } from '@/lib/prompts';
 
 interface EmergencySimulationProps {
   systemPrompt: string;
   scenarioName: string;
+  initialCoordinates?: { lat: number; lng: number };
 }
 
-export default function EmergencySimulation({ systemPrompt, scenarioName }: EmergencySimulationProps) {
+export default function EmergencySimulation({ systemPrompt, scenarioName, initialCoordinates }: EmergencySimulationProps) {
   const [isConnected, setIsConnected] = useState(false);
   const [messages, setMessages] = useState<Array<{id: string, type: 'user' | 'agent', content: string, timestamp: Date}>>([]);
-  const [userId] = useState(() => `dispatcher_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
   const [currentPrompt, setCurrentPrompt] = useState(systemPrompt);
   const [currentScenarioName, setCurrentScenarioName] = useState(scenarioName);
-
-  const conversation = useConversation({
-    onConnect: () => {
-      console.log('Connected to ElevenLabs agent');
-      setIsConnected(true);
-    },
-    onDisconnect: () => {
-      console.log('Disconnected from ElevenLabs agent');
-      setIsConnected(false);
-    },
-    onMessage: (message) => {
-      console.log('Received message:', message);
-      const newMessage = {
-        id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        type: (message.source === 'user' ? 'user' : 'agent') as 'user' | 'agent',
-        content: message.message,
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, newMessage]);
-    },
-    onError: (error) => {
-      console.error('Conversation error:', error);
-    },
-    onStatusChange: (status) => {
-      console.log('Status changed:', status);
-    },
-      overrides: {
-        agent: {
-          prompt: {
-            prompt: currentPrompt
-          },
-          firstMessage: 'Hello?'
-        }
-      }
-  });
+  const [currentCoordinates, setCurrentCoordinates] = useState(initialCoordinates);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const startConversation = async () => {
-    try {
-      // Request microphone permission first
-      await navigator.mediaDevices.getUserMedia({ audio: true });
-      
-      const agentId = process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID;
-      if (!agentId) {
-        throw new Error('ElevenLabs Agent ID not configured');
-      }
+    setIsConnected(true);
+    
+    // Format system prompt and send initial message from the agent based on scenario
+    const formattedSystemPrompt = `You are roleplaying as an emergency caller in a training simulation for dispatchers. 
 
-      await conversation.startSession({
-        agentId,
-        connectionType: 'webrtc',
-        userId
+Here is your character and situation:
+
+${currentPrompt}
+
+You are calling emergency services. Respond as this character would - stay in character with the described emotional state, location, and scenario details. Be natural and realistic in your responses. You are the one experiencing the emergency, so address the dispatcher as "you" when referring to them. Keep your responses relatively brief and realistic for someone in an emergency situation.
+
+Start the conversation by calling emergency services. Be in character - panicked, emotional, describing what you're witnessing.`;
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [],
+          systemPrompt: formattedSystemPrompt
+        })
       });
+
+      if (response.ok) {
+        const data = await response.json();
+        const initialMessage = {
+          id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          type: 'agent' as const,
+          content: data.message,
+          timestamp: new Date()
+        };
+        setMessages([initialMessage]);
+      }
     } catch (error) {
-      console.error('Failed to start conversation:', error);
-      alert('Failed to start conversation. Please check your microphone permissions and agent configuration.');
+      console.error('Error starting conversation:', error);
     }
   };
 
   const endConversation = async () => {
-    try {
-      await conversation.endSession();
-    } catch (error) {
-      console.error('Failed to end conversation:', error);
-    }
+    setIsConnected(false);
+    setMessages([]);
   };
 
-  const sendTextMessage = (message: string) => {
-    conversation.sendUserMessage(message);
+  const sendTextMessage = async (message: string) => {
+    const userMessage = {
+      id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      type: 'user' as const,
+      content: message,
+      timestamp: new Date()
+    };
+    
+    setMessages((prev: typeof messages) => [...prev, userMessage]);
+    setIsLoading(true);
+
+    try {
+      // Format the system prompt to instruct the AI how to roleplay
+      const formattedSystemPrompt = `You are roleplaying as an emergency caller in a training simulation for dispatchers. 
+
+Here is your character and situation:
+
+${currentPrompt}
+
+You are calling emergency services. Respond as this character would - stay in character with the described emotional state, location, and scenario details. Be natural and realistic in your responses. You are the one experiencing the emergency, so address the dispatcher as "you" when referring to them. Keep your responses relatively brief and realistic for someone in an emergency situation.`;
+
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [...messages, userMessage].map(m => ({
+            role: m.type === 'user' ? 'user' : 'assistant',
+            content: m.content
+          })),
+          systemPrompt: formattedSystemPrompt
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get response');
+      }
+
+      const data = await response.json();
+      
+      const agentMessage = {
+        id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        type: 'agent' as const,
+        content: data.message,
+        timestamp: new Date()
+      };
+      
+      setMessages((prev: typeof messages) => [...prev, agentMessage]);
+    } catch (error) {
+      console.error('Error sending message:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const getNewScenario = () => {
     const newPrompt = getRandomEmergencyPrompt();
     setCurrentPrompt(newPrompt.prompt);
     setCurrentScenarioName(newPrompt.name);
+    setCurrentCoordinates(newPrompt.coordinates);
     setMessages([]); // Clear previous conversation
   };
 
-  return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <EmergencyHeader scenarioName={currentScenarioName} onNewScenario={getNewScenario} />
+  const generateNewScenario = async () => {
+    setIsGenerating(true);
+    try {
+      const response = await fetch('/api/generate-scenario', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate scenario');
+      }
+
+      const data = await response.json();
+      console.log('Response from /api/generate-scenario:', JSON.stringify(data, null, 2));
+      const generatedScenario = data.scenario;
+      const coordinates = data.coordinates;
       
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-            <ConversationDisplay 
-              messages={messages}
-              isConnected={isConnected}
-              isSpeaking={conversation.isSpeaking}
-            />
+      // Extract a simple name from the scenario (use first line or first 30 chars)
+      const scenarioLines = generatedScenario.split('\n').filter((line: string) => line.trim());
+      const name = scenarioLines[0] || 'AI Generated Scenario';
+      
+      setCurrentPrompt(generatedScenario);
+      setCurrentScenarioName(name.substring(0, 50));
+      setCurrentCoordinates(coordinates);
+      setMessages([]); // Clear previous conversation
+    } catch (error) {
+      console.error('Error generating scenario:', error);
+      alert('Failed to generate new scenario. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <EmergencyHeader 
+        scenarioName={currentScenarioName} 
+        onNewScenario={getNewScenario}
+        onGenerateScenario={generateNewScenario}
+        isGenerating={isGenerating}
+      />
+      
+      <main className="container mx-auto px-6 py-2">
+        <div className="max-w-7xl mx-auto h-[calc(100vh-60px)]">
+          <div className="grid grid-cols-1 lg:grid-cols-[30%_70%] gap-4 h-full">
+            {/* Map Panel */}
+            <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl overflow-hidden shadow-2xl h-full">
+              <EmergencyMap 
+                coordinates={currentCoordinates}
+                scenarioName={currentScenarioName}
+              />
+            </div>
             
-            <ConversationControls
-              isConnected={isConnected}
-              isSpeaking={conversation.isSpeaking}
-              onStart={startConversation}
-              onEnd={endConversation}
-              onSendMessage={sendTextMessage}
-              canSendFeedback={conversation.canSendFeedback}
-              onSendFeedback={conversation.sendFeedback}
-            />
+            {/* Chat Panel */}
+            <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl shadow-2xl overflow-hidden h-full flex flex-col">
+              <ConversationDisplay 
+                messages={messages}
+                isConnected={isConnected}
+                isSpeaking={isLoading}
+              />
+              
+              <ConversationControls
+                isConnected={isConnected}
+                isSpeaking={isLoading}
+                onStart={startConversation}
+                onEnd={endConversation}
+                onSendMessage={sendTextMessage}
+                canSendFeedback={false}
+                onSendFeedback={() => {}}
+              />
+            </div>
           </div>
         </div>
       </main>
