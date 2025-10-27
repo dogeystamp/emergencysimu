@@ -25,7 +25,6 @@ export default function EmergencySimulation({ systemPrompt, scenarioName, initia
   const startConversation = async () => {
     setIsConnected(true);
     
-    // Format system prompt and send initial message from the agent based on scenario
     const formattedSystemPrompt = `You are roleplaying as an emergency caller in a training simulation for dispatchers. 
 
 Here is your character and situation:
@@ -78,7 +77,6 @@ Start the conversation by calling emergency services. Be in character - panicked
     setIsLoading(true);
 
     try {
-      // Format the system prompt to instruct the AI how to roleplay
       const formattedSystemPrompt = `You are roleplaying as an emergency caller in a training simulation for dispatchers. 
 
 Here is your character and situation:
@@ -125,7 +123,7 @@ You are calling emergency services. Respond as this character would - stay in ch
     setCurrentPrompt(newPrompt.prompt);
     setCurrentScenarioName(newPrompt.name);
     setCurrentCoordinates(newPrompt.coordinates);
-    setMessages([]); // Clear previous conversation
+    setMessages([]);
   };
 
   const generateNewScenario = async () => {
@@ -141,18 +139,16 @@ You are calling emergency services. Respond as this character would - stay in ch
       }
 
       const data = await response.json();
-      console.log('Response from /api/generate-scenario:', JSON.stringify(data, null, 2));
       const generatedScenario = data.scenario;
       const coordinates = data.coordinates;
       
-      // Extract a simple name from the scenario (use first line or first 30 chars)
       const scenarioLines = generatedScenario.split('\n').filter((line: string) => line.trim());
       const name = scenarioLines[0] || 'AI Generated Scenario';
       
       setCurrentPrompt(generatedScenario);
       setCurrentScenarioName(name.substring(0, 50));
       setCurrentCoordinates(coordinates);
-      setMessages([]); // Clear previous conversation
+      setMessages([]);
     } catch (error) {
       console.error('Error generating scenario:', error);
       alert('Failed to generate new scenario. Please try again.');
@@ -162,7 +158,7 @@ You are calling emergency services. Respond as this character would - stay in ch
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="bg-[#0A192F]">
       <EmergencyHeader 
         scenarioName={currentScenarioName} 
         onNewScenario={getNewScenario}
@@ -170,19 +166,17 @@ You are calling emergency services. Respond as this character would - stay in ch
         isGenerating={isGenerating}
       />
       
-      <main className="container mx-auto px-6 py-2">
-        <div className="max-w-7xl mx-auto h-[calc(100vh-60px)]">
-          <div className="grid grid-cols-1 lg:grid-cols-[30%_70%] gap-4 h-full">
-            {/* Map Panel */}
-            <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl overflow-hidden shadow-2xl h-full">
+      <main className="container mx-auto px-4 py-4">
+        <div className="max-w-full mx-auto h-[calc(100vh-100px)]">
+          <div className="grid grid-cols-1 lg:grid-cols-[35%_65%] gap-4 h-full">
+            <div className="bg-slate-900/50 border border-slate-700 rounded-2xl overflow-hidden shadow-2xl h-full">
               <EmergencyMap 
                 coordinates={currentCoordinates}
                 scenarioName={currentScenarioName}
               />
             </div>
             
-            {/* Chat Panel */}
-            <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl shadow-2xl overflow-hidden h-full flex flex-col">
+            <div className="bg-slate-900/50 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden h-full flex flex-col">
               <ConversationDisplay 
                 messages={messages}
                 isConnected={isConnected}

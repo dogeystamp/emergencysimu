@@ -26,10 +26,10 @@ export default function TrainPage() {
   }, []);
 
   return (
-    <>
+    <div className="bg-[#0A192F] min-h-screen">
       <Navigation />
       {isLoading ? (
-        <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="flex items-center justify-center h-screen">
           <LoadingSpinner />
         </div>
       ) : (
@@ -39,7 +39,7 @@ export default function TrainPage() {
           initialCoordinates={initialCoordinates}
         />
       )}
-    </>
+    </div>
   );
 }
 

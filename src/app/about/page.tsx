@@ -1,58 +1,52 @@
-import Navigation from '@/components/Navigation';
+'use client';
+
 import Link from 'next/link';
+import Navigation from '@/components/Navigation';
 
 export default function AboutPage() {
   return (
     <>
       <Navigation />
-      <main className="min-h-screen bg-slate-900 text-white py-24 px-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-16">
-            <h1 className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-              About DispatchPro
-            </h1>
-            <p className="text-lg text-slate-300 max-w-2xl mx-auto">
-              Empowering the next generation of emergency dispatchers with cutting-edge AI simulation technology.
+      <main className="bg-[#0A192F] text-white py-24 px-4">
+        <div className="container mx-auto">
+          <div className="max-w-4xl mx-auto text-center mb-16">
+            <h1 className="text-5xl md:text-6xl font-bold mb-4">Our Mission</h1>
+            <p className="text-lg text-slate-300">
+              To empower emergency dispatchers with the world's most advanced and effective training simulator.
             </p>
           </div>
 
-          <div className="space-y-12">
-            <div className="p-8 bg-slate-800/50 border border-slate-700 rounded-2xl">
-              <h2 className="text-3xl font-bold text-white mb-4">Our Mission</h2>
+          <div className="grid md:grid-cols-2 gap-16 items-center mb-24">
+            <div>
+              <h2 className="text-4xl font-bold mb-6">The Challenge</h2>
               <p className="text-slate-300 leading-relaxed">
-                DispatchPro is dedicated to providing a realistic and safe training environment for emergency dispatchers. We believe that by leveraging the power of AI, we can create highly immersive and effective training simulations that prepare dispatchers for the high-stakes reality of their job. Our mission is to improve emergency response outcomes by empowering dispatchers with the skills and confidence they need to excel.
+                Emergency dispatchers are the first point of contact in a crisis. They face immense pressure to make life-or-death decisions in seconds. Traditional training methods often fall short of preparing them for the unpredictable and emotionally charged nature of real-world emergencies.
               </p>
             </div>
-
-            <div className="p-8 bg-slate-800/50 border border-slate-700 rounded-2xl">
-              <h2 className="text-3xl font-bold text-white mb-4">How It Works</h2>
-              <ul className="space-y-4 text-slate-300">
-                <li className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center font-bold text-white">1</div>
-                  <p>Launch a training session and get assigned a random, AI-generated emergency scenario.</p>
-                </li>
-                <li className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center font-bold text-white">2</div>
-                  <p>Interact with a realistic AI caller that responds to your questions and commands in real-time.</p>
-                </li>
-                <li className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center font-bold text-white">3</div>
-                  <p>Utilize quick responses and your own custom messages to navigate the conversation and gather critical information.</p>
-                </li>
-                <li className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center font-bold text-white">4</div>
-                  <p>Receive feedback on your performance and identify areas for improvement.</p>
-                </li>
-              </ul>
+            <div>
+              <img src="/challenge.jpg" alt="Dispatcher under pressure" className="rounded-2xl shadow-2xl" />
             </div>
           </div>
 
-          <div className="text-center mt-16">
+          <div className="grid md:grid-cols-2 gap-16 items-center">
+            <div>
+              <img src="/solution.jpg" alt="Dispatcher using DispatchPro" className="rounded-2xl shadow-2xl" />
+            </div>
+            <div>
+              <h2 className="text-4xl font-bold mb-6">The Solution</h2>
+              <p className="text-slate-300 leading-relaxed">
+                DispatchPro bridges the gap between classroom training and real-world experience. Our AI-powered simulator provides a safe and controlled environment for dispatchers to hone their skills, build confidence, and develop the muscle memory needed to excel under pressure. By creating realistic and dynamic scenarios, we empower dispatchers to be at their best when it matters most.
+              </p>
+            </div>
+          </div>
+
+          <div className="text-center mt-24">
             <Link
               href="/train"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full font-semibold text-lg shadow-lg shadow-blue-500/25 hover:shadow-xl transition-all"
+              prefetch={false}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold text-lg shadow-lg shadow-blue-500/25 hover:shadow-xl transition-all"
             >
-              Start Your Training
+              Request a Demo
             </Link>
           </div>
         </div>
@@ -60,4 +54,3 @@ export default function AboutPage() {
     </>
   );
 }
-
