@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import ConversationControls from './ConversationControls';
 import ConversationDisplay from './ConversationDisplay';
 import EmergencyHeader from './EmergencyHeader';
@@ -19,104 +19,59 @@ export default function EmergencySimulation({ systemPrompt, scenarioName, initia
   const [currentPrompt, setCurrentPrompt] = useState(systemPrompt);
   const [currentScenarioName, setCurrentScenarioName] = useState(scenarioName);
   const [currentCoordinates, setCurrentCoordinates] = useState(initialCoordinates);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false); // AI is speaking
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const startConversation = async () => {
-    setIsConnected(true);
-    
-    const formattedSystemPrompt = `You are roleplaying as an emergency caller in a training simulation for dispatchers. 
+  const wsRef = useRef<WebSocket | null>(null);
 
-Here is your character and situation:
+  const addMessage = useCallback((message: {id: string, type: 'user' | 'agent', content: string, timestamp: Date}) => {
+    setMessages((prev: typeof messages) => [...prev, message]);
+  }, []);
 
-${currentPrompt}
-
-You are calling emergency services. Respond as this character would - stay in character with the described emotional state, location, and scenario details. Be natural and realistic in your responses. You are the one experiencing the emergency, so address the dispatcher as "you" when referring to them. Keep your responses relatively brief and realistic for someone in an emergency situation.
-
-Start the conversation by calling emergency services. Be in character - panicked, emotional, describing what you're witnessing.`;
-
-    try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [],
-          systemPrompt: formattedSystemPrompt
-        })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const initialMessage = {
-          id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          type: 'agent' as const,
-          content: data.message,
-          timestamp: new Date()
-        };
-        setMessages([initialMessage]);
+  const startConversation = useCallback(() => {
+    if (!isConnected) {
+      setIsConnected(true);
+      // WebSocket connection will be established by ConversationDisplay
+      // Send initial system prompt to the server via WebSocket
+      // The server will then send the first AI message back as audio
+      const initialSystemPrompt = `You are roleplaying as an emergency caller in a training simulation for dispatchers. \n\nHere is your character and situation:\n\n${currentPrompt}\n\nYou are calling emergency services. Respond as this character would - stay in character with the described emotional state, location, and scenario details. Be natural and realistic in your responses. You are the one experiencing the emergency, so address the dispatcher as "you" when referring to them. Keep your responses relatively brief and realistic for someone in an emergency situation.\n\nStart the conversation by calling emergency services. Be in character - panicked, emotional, describing what you're witnessing.`;
+      
+      // Send the system prompt as the first message to the WebSocket server
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({ type: 'system_prompt', content: initialSystemPrompt }));
+      } else {
+        // If WebSocket is not yet open, queue the message or handle appropriately
+        console.warn('WebSocket not open, cannot send initial system prompt.');
       }
-    } catch (error) {
-      console.error('Error starting conversation:', error);
     }
-  };
+  }, [isConnected, currentPrompt]);
 
-  const endConversation = async () => {
-    setIsConnected(false);
-    setMessages([]);
-  };
+  const endConversation = useCallback(() => {
+    if (isConnected) {
+      setIsConnected(false);
+      setMessages([]);
+      if (wsRef.current) {
+        wsRef.current.close();
+        wsRef.current = null;
+      }
+    }
+  }, [isConnected]);
 
-  const sendTextMessage = async (message: string) => {
+  const sendAudioMessage = useCallback((message: string) => {
     const userMessage = {
       id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       type: 'user' as const,
       content: message,
       timestamp: new Date()
     };
-    
-    setMessages((prev: typeof messages) => [...prev, userMessage]);
-    setIsLoading(true);
+    addMessage(userMessage);
 
-    try {
-      const formattedSystemPrompt = `You are roleplaying as an emergency caller in a training simulation for dispatchers. 
-
-Here is your character and situation:
-
-${currentPrompt}
-
-You are calling emergency services. Respond as this character would - stay in character with the described emotional state, location, and scenario details. Be natural and realistic in your responses. You are the one experiencing the emergency, so address the dispatcher as "you" when referring to them. Keep your responses relatively brief and realistic for someone in an emergency situation.`;
-
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [...messages, userMessage].map(m => ({
-            role: m.type === 'user' ? 'user' : 'assistant',
-            content: m.content
-          })),
-          systemPrompt: formattedSystemPrompt
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to get response');
-      }
-
-      const data = await response.json();
-      
-      const agentMessage = {
-        id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        type: 'agent' as const,
-        content: data.message,
-        timestamp: new Date()
-      };
-      
-      setMessages((prev: typeof messages) => [...prev, agentMessage]);
-    } catch (error) {
-      console.error('Error sending message:', error);
-    } finally {
-      setIsLoading(false);
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(message); // Send transcribed text to WebSocket
+    } else {
+      console.error('WebSocket not open, cannot send message.');
     }
-  };
+  }, [addMessage]);
 
   const getNewScenario = () => {
     const newPrompt = getRandomEmergencyPrompt();
@@ -180,15 +135,17 @@ You are calling emergency services. Respond as this character would - stay in ch
               <ConversationDisplay 
                 messages={messages}
                 isConnected={isConnected}
-                isSpeaking={isLoading}
+                isSpeaking={isSpeaking}
+                setIsSpeaking={setIsSpeaking}
+                addMessage={addMessage}
               />
               
               <ConversationControls
                 isConnected={isConnected}
-                isSpeaking={isLoading}
-                onStart={startConversation}
-                onEnd={endConversation}
-                onSendMessage={sendTextMessage}
+                isSpeaking={isSpeaking}
+                onStartCall={startConversation}
+                onEndCall={endConversation}
+                onSendMessage={sendAudioMessage}
                 canSendFeedback={false}
                 onSendFeedback={() => {}}
               />
